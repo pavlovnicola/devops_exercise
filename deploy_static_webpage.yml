@@ -1,0 +1,33 @@
+---
+- name: Deploy Static Webpage
+  hosts: exercise
+  become: True
+
+  tasks:
+  - name: Create dirs
+    file:
+      path: /root/exercise
+      state: directory
+      mode: 0755
+
+  - name: Copy HTML file 
+    copy:
+      src: files/index.html
+      dest: /root/exercise
+      owner: root
+      group: root
+      mode: 0644
+
+  - name: Copy Dockerfile
+    copy:
+      src: files/Dockerfile
+      dest: /root/
+      owner: root
+      group: root
+      mode: 0644
+
+  - name: Build custom Nginx container image
+    shell: cd /root/; docker build -t devops-exercise/nicola-pavlov .
+
+  - name: Run the custom Ngins image
+    shell: docker run -d --name nicola-pavlov -p 80:80 devops-exercise/nicola-pavlov

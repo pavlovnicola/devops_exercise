@@ -1,0 +1,75 @@
+---
+- name: Create VMware guest
+  hosts: localhost
+  gather_facts: False
+
+  vars:
+    vcenter_host: "{{ lookup('env','VSPHERE_HOST') }}"
+    cluster_name: "{{ lookup('env','VSPHERE_CLUSTER_NAME') }}"
+    template_name: "{{ lookup('env','VSPHERE_TEMPLATE_NAME') }}"
+    resource_pool_name: "{{ lookup('env','VSPHERE_COMPUTE_RESOURCE_NAME') }}"
+    user_name: "{{ lookup('env','VSPHERE_USERNAME') }}"
+    password: "{{ lookup('env','VSPHERE_PASSWORD') }}"
+    folder_name: "{{ lookup('env','VSPHERE_CLUSTER_FOLDER') }}"
+
+  tasks:
+  - name: Deploy VM {{ guest }} from template {{ template_name }}
+    vsphere_guest:
+      vcenter_hostname: "{{ vcenter_host }}"
+      username: "{{ user_name }}"
+      password: "{{ password }}"
+      guest: "{{ guest }}"
+      from_template: yes
+      power_on_after_clone: yes
+      template_src: "{{ template_name }}"
+      cluster: "{{ cluster_name }}"
+      resource_pool: "{{ resource_pool_name }}"
+      validate_certs: no
+      vm_extra_config:
+        folder: "{{ folder_name }}"
+        notes: "DevOps Exercise"
+
+  - name: Loop until the guest has an IP Address
+    vsphere_guest:
+      vcenter_hostname: "{{ vcenter_host }}"
+      username: "{{ user_name }}"
+      password: "{{ password }}"
+      guest: "{{ guest }}"
+      validate_certs: no
+      vmware_guest_facts: yes
+    register: instance_info
+    until: instance_info.ansible_facts.hw_eth0['ipaddresses']
+    retries: 30
+    delay: 10
+
+  - name: Grab the IP Address
+    set_fact:
+      ip_address: "{{ item  }}"
+    with_items:
+    - "{{ instance_info.ansible_facts.hw_eth0.ipaddresses | ipv4('address') }}"
+
+  - name: wait for ssh availability
+    local_action: wait_for host={{ ip_address }} port=22 state=started delay=10
+
+  - name: Populate inventory for master nodes
+    lineinfile:
+      dest: inventory_temp
+      line: "{{ ip_address }}"
+
+  - name: Add IP to new inventory in order to change hostname on the fly
+    add_host: hostname={{ guest }} ansible_ssh_host={{ ip_address }} ansible_ssh_user=root groups=created_nodes
+
+- name: Setting VM hostname
+  hosts: created_nodes
+  gather_facts: False
+
+  tasks:
+
+  - name: Set the hostname to match the guest name
+    hostname_set:
+      name: "{{ guest }}"
+    register: check_host
+
+  - name: Reboot the VM if hostname changed
+    reboot:
+    when: check_host.changed
