@@ -35,3 +35,6 @@ Requirements:
 4. In order to deploy Nginx webapp, run the following ansible playbook:
 
     `$ ansible-playbook -i path/to/inventory_exercise deploy_static_webpage.yml`
+
+
+You can open a browser now and put in the IP Address of the VM created!!
