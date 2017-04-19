@@ -33,4 +33,5 @@ Requirements:
     `$ ansible-playbook -i path/to/inventory_exercise install-docker.yml`
 
 4. In order to deploy Nginx webapp, run the following ansible playbook:
+
     `$ ansible-playbook -i path/to/inventory_exercise deploy_static_webpage.yml`
