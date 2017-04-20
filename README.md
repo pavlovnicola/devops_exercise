@@ -38,3 +38,9 @@ Requirements:
 
 
 You can open a browser now and put in the IP Address of the VM created!!
+
+CI Integration
+
+The Travis-CI section assumes you have a VM already provisioned and the name of the inventory is "inventory-exercise"
+
+Travis CI should have SSH connection to the VM.
