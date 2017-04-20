@@ -5,7 +5,7 @@ install:
   - pip install ansible
 
 script:
-  - ansible-playbook -i inventory_exercise install_docker.yml
+  - ansible-playbook -i inventory_exercise install-docker.yml
   - ansible-playbook -i inventory_exercise deploy_static_webpage.yml
 
 
