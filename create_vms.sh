@@ -8,6 +8,7 @@ then
 fi
 
 source vsphere.sh
+
 VM_NAME=$1
 
 # Clean up
